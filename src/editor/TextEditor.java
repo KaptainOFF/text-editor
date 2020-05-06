@@ -2,7 +2,10 @@ package editor;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class TextEditor extends JFrame {
@@ -27,10 +30,11 @@ public class TextEditor extends JFrame {
         saveButton.setBounds(30, 0, 80, 15);
         saveButton.addActionListener(listener -> {
             String fileName = fileNameField.getText();
-            try (FileWriter writer = new FileWriter(new File(fileName));) {
-                writer.write(jTextArea.getText());
+            try (FileOutputStream writer = new FileOutputStream(new File(fileName))) {
+                byte[] lines = jTextArea.getText().getBytes();
+                writer.write(lines);
             } catch (IOException e) {
-                e.printStackTrace();
+                jTextArea.setText(null);
             }
         });
 
@@ -39,12 +43,11 @@ public class TextEditor extends JFrame {
         loadButton.setBounds(100, 0, 80, 15);
         loadButton.addActionListener(listener -> {
             String fileName = fileNameField.getText();
-            try (Scanner scanner = new Scanner(new File(fileName));) {
-                while (scanner.hasNext()) {
-                    jTextArea.append(scanner.nextLine());
-                }
+            try (InputStream stream = new FileInputStream(new File(fileName));) {
+                byte[] file = stream.readAllBytes();
+                jTextArea.setText(new String(file));
             } catch (IOException e) {
-                e.printStackTrace();
+                jTextArea.setText(null);
             }
         });
 
@@ -59,6 +62,48 @@ public class TextEditor extends JFrame {
         textBodyPanel.add(loadButton, BorderLayout.PAGE_START);
         textBodyPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.setName("MenuBar");
+
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        fileMenu.setName("MenuFile");
+
+        JMenuItem loadMenuItem = new JMenuItem("Load");
+        loadMenuItem.setName("MenuLoad");
+        loadMenuItem.addActionListener(listener -> {
+            String fileName = fileNameField.getText();
+            try (InputStream stream = new FileInputStream(new File(fileName));) {
+                byte[] file = stream.readAllBytes();
+                jTextArea.setText(new String(file));
+            } catch (IOException e) {
+                jTextArea.setText(null);
+            }
+        });
+
+        JMenuItem saveMenuItem = new JMenuItem("Save");
+        saveMenuItem.setName("MenuSave");
+        saveMenuItem.addActionListener(listener -> {
+            String fileName = fileNameField.getText();
+            try (FileOutputStream writer = new FileOutputStream(new File(fileName))) {
+                byte[] lines = jTextArea.getText().getBytes();
+                writer.write(lines);
+            } catch (IOException e) {
+                jTextArea.setText(null);
+            }
+        });
+
+        JMenuItem exitMenuItem = new JMenuItem("Exit");
+        exitMenuItem.setName("MenuExit");
+        exitMenuItem.addActionListener(event -> dispose());
+
+        fileMenu.add(loadMenuItem);
+        fileMenu.add(saveMenuItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitMenuItem);
+        menuBar.add(fileMenu);
+
+        setJMenuBar(menuBar);
         add(scrollPane);
         add(textBodyPanel);
 
