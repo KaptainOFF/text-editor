@@ -14,7 +14,7 @@ public class TextEditor extends JFrame {
 
     private void initApp() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(300, 320);
+        setSize(400, 420);
         setLocationRelativeTo(null);
 
         JTextArea searchField = new JTextArea();
@@ -25,12 +25,12 @@ public class TextEditor extends JFrame {
 
         JTextArea jTextArea = new JTextArea();
         jTextArea.setName("TextArea");
-        setTitle("The first page");
+        setTitle("Text Editor");
         jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JScrollPane scrollPane = new JScrollPane(jTextArea);
         scrollPane.setName("ScrollPane");
-        scrollPane.setBounds(20, 50, 245, 200);
+        scrollPane.setBounds(20, 50, 345, 300);
 
         JButton saveButton = new JButton();
         ImageIcon icon = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\save.png");
@@ -77,6 +77,8 @@ public class TextEditor extends JFrame {
             }
         });
 
+        JCheckBox useRegExpCheckBox = new JCheckBox("Use regex");
+
         JButton searchButton = new JButton();
         ImageIcon search = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\mglass.png");
         Image searchImage = search.getImage();
@@ -86,12 +88,29 @@ public class TextEditor extends JFrame {
         searchButton.addActionListener((listener) -> {
         });
 
+        JButton previousMatchButton = new JButton();
+        ImageIcon arrLeft = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\arrLeft.png");
+        Image arrLeftImage = arrLeft.getImage();
+        previousMatchButton.setIcon(new ImageIcon(arrLeftImage.getScaledInstance(32, 32, 1)));
+        previousMatchButton.setPreferredSize(new Dimension(32, 32));
+        previousMatchButton.setName("PreviousMatchButton");
+
+        JButton nextMatchButton = new JButton();
+        ImageIcon arrRight = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\arrRight.png");
+        Image arrRightImage = arrRight.getImage();
+        nextMatchButton.setIcon(new ImageIcon(arrRightImage.getScaledInstance(32, 32, 1)));
+        nextMatchButton.setPreferredSize(new Dimension(32, 32));
+        nextMatchButton.setName("NextMatchButton");
+
         JPanel textBodyPanel = new JPanel();
         textBodyPanel.setBounds(30, 30, 200, 200);
         textBodyPanel.add(saveButton, BorderLayout.PAGE_START);
         textBodyPanel.add(loadButton, BorderLayout.PAGE_START);
         textBodyPanel.add(searchField, BorderLayout.PAGE_START);
         textBodyPanel.add(searchButton, BorderLayout.PAGE_START);
+        textBodyPanel.add(previousMatchButton, BorderLayout.PAGE_START);
+        textBodyPanel.add(nextMatchButton, BorderLayout.PAGE_START);
+        textBodyPanel.add(useRegExpCheckBox, BorderLayout.PAGE_START);
         textBodyPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JMenuBar menuBar = new JMenuBar();
@@ -104,6 +123,18 @@ public class TextEditor extends JFrame {
         JMenuItem startSearch = new JMenuItem("Start search");
         startSearch.setName("MenuSearchStart");
         searchMenu.add(startSearch);
+
+        JMenuItem previousSearch = new JMenuItem("Previous match");
+        previousSearch.setName("MenuPreviousMatch");
+        searchMenu.add(previousSearch);
+
+        JMenuItem nextMatch = new JMenuItem("Next match");
+        nextMatch.setName("MenuNextMatch");
+        searchMenu.add(nextMatch);
+
+        JMenuItem useRegExp = new JMenuItem("Use regular expressions");
+        useRegExp.setName("MenuUseRegExp");
+        searchMenu.add(useRegExp);
 
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
