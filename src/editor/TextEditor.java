@@ -17,11 +17,11 @@ public class TextEditor extends JFrame {
         setSize(300, 320);
         setLocationRelativeTo(null);
 
-        JTextArea fileNameField = new JTextArea();
-        fileNameField.setPreferredSize(new Dimension(100, 30));
-        fileNameField.setName("FilenameField");
-        fileNameField.getDocument().putProperty("filterNewlines", Boolean.TRUE);
-        fileNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        JTextArea searchField = new JTextArea();
+        searchField.setPreferredSize(new Dimension(100, 30));
+        searchField.setName("SearchField");
+        searchField.getDocument().putProperty("filterNewlines", Boolean.TRUE);
+        searchField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JTextArea jTextArea = new JTextArea();
         jTextArea.setName("TextArea");
@@ -52,7 +52,6 @@ public class TextEditor extends JFrame {
                     jTextArea.setText(null);
                 }
             }
-
         });
 
         JButton loadButton = new JButton();
@@ -76,8 +75,6 @@ public class TextEditor extends JFrame {
                     jTextArea.setText(null);
                 }
             }
-
-
         });
 
         JButton searchButton = new JButton();
@@ -93,18 +90,26 @@ public class TextEditor extends JFrame {
         textBodyPanel.setBounds(30, 30, 200, 200);
         textBodyPanel.add(saveButton, BorderLayout.PAGE_START);
         textBodyPanel.add(loadButton, BorderLayout.PAGE_START);
-        textBodyPanel.add(fileNameField, BorderLayout.PAGE_START);
+        textBodyPanel.add(searchField, BorderLayout.PAGE_START);
         textBodyPanel.add(searchButton, BorderLayout.PAGE_START);
         textBodyPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JMenuBar menuBar = new JMenuBar();
         menuBar.setName("MenuBar");
 
+        JMenu searchMenu = new JMenu("Search");
+        searchMenu.setMnemonic(KeyEvent.VK_S);
+        searchMenu.setName("MenuSearch");
+
+        JMenuItem startSearch = new JMenuItem("Start search");
+        startSearch.setName("MenuSearchStart");
+        searchMenu.add(startSearch);
+
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
         fileMenu.setName("MenuFile");
 
-        JMenuItem loadMenuItem = new JMenuItem("Load");
+        JMenuItem loadMenuItem = new JMenuItem("Open");
         loadMenuItem.setName("MenuLoad");
         loadMenuItem.addActionListener(listener -> {
             JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
@@ -125,13 +130,19 @@ public class TextEditor extends JFrame {
 
         JMenuItem saveMenuItem = new JMenuItem("Save");
         saveMenuItem.setName("MenuSave");
-        saveMenuItem.addActionListener(listener -> {
-            String fileName = fileNameField.getText();
-            try (FileOutputStream writer = new FileOutputStream(new File(fileName))) {
-                byte[] lines = jTextArea.getText().getBytes();
-                writer.write(lines);
-            } catch (IOException e) {
-                jTextArea.setText(null);
+        saveMenuItem.addActionListener((listener) -> {
+            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+
+            int returnValue = jfc.showOpenDialog(null);
+
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = jfc.getSelectedFile();
+                try (FileOutputStream writer = new FileOutputStream(selectedFile)) {
+                    byte[] lines = jTextArea.getText().getBytes();
+                    writer.write(lines);
+                } catch (IOException e) {
+                    jTextArea.setText(null);
+                }
             }
         });
 
@@ -143,7 +154,9 @@ public class TextEditor extends JFrame {
         fileMenu.add(saveMenuItem);
         fileMenu.addSeparator();
         fileMenu.add(exitMenuItem);
+
         menuBar.add(fileMenu);
+        menuBar.add(searchMenu);
 
         setJMenuBar(menuBar);
         add(scrollPane);
@@ -151,5 +164,6 @@ public class TextEditor extends JFrame {
 
 
         setVisible(true);
+
     }
 }
