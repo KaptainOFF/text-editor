@@ -1,23 +1,26 @@
 package editor;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 
 public class TextEditor extends JFrame {
+
     public TextEditor() {
+        initApp();
+    }
+
+    private void initApp() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(300, 300);
+        setSize(300, 320);
         setLocationRelativeTo(null);
 
-        JTextArea fileNameField = new JTextArea(1, 10);
+        JTextArea fileNameField = new JTextArea();
+        fileNameField.setPreferredSize(new Dimension(100, 30));
         fileNameField.setName("FilenameField");
-        fileNameField.getDocument().putProperty("filterNewlines",
-                Boolean.TRUE);
+        fileNameField.getDocument().putProperty("filterNewlines", Boolean.TRUE);
         fileNameField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JTextArea jTextArea = new JTextArea();
@@ -25,41 +28,73 @@ public class TextEditor extends JFrame {
         setTitle("The first page");
         jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
-        JButton saveButton = new JButton("Save");
-        saveButton.setName("SaveButton");
-        saveButton.setBounds(30, 0, 80, 15);
-        saveButton.addActionListener(listener -> {
-            String fileName = fileNameField.getText();
-            try (FileOutputStream writer = new FileOutputStream(new File(fileName))) {
-                byte[] lines = jTextArea.getText().getBytes();
-                writer.write(lines);
-            } catch (IOException e) {
-                jTextArea.setText(null);
-            }
-        });
-
-        JButton loadButton = new JButton("Load");
-        loadButton.setName("LoadButton");
-        loadButton.setBounds(100, 0, 80, 15);
-        loadButton.addActionListener(listener -> {
-            String fileName = fileNameField.getText();
-            try (InputStream stream = new FileInputStream(new File(fileName));) {
-                byte[] file = stream.readAllBytes();
-                jTextArea.setText(new String(file));
-            } catch (IOException e) {
-                jTextArea.setText(null);
-            }
-        });
-
         JScrollPane scrollPane = new JScrollPane(jTextArea);
         scrollPane.setName("ScrollPane");
-        scrollPane.setBounds(20, 40, 245, 200);
+        scrollPane.setBounds(20, 50, 245, 200);
+
+        JButton saveButton = new JButton();
+        ImageIcon icon = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\save.png");
+        Image image = icon.getImage();
+        saveButton.setIcon(new ImageIcon(image.getScaledInstance(32, 32, 4)));
+        saveButton.setName("SaveButton");
+        saveButton.setPreferredSize(new Dimension(32, 32));
+        saveButton.addActionListener((listener) -> {
+            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+
+            int returnValue = jfc.showOpenDialog(null);
+
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = jfc.getSelectedFile();
+                try (FileOutputStream writer = new FileOutputStream(selectedFile)) {
+                    byte[] lines = jTextArea.getText().getBytes();
+                    writer.write(lines);
+                } catch (IOException e) {
+                    jTextArea.setText(null);
+                }
+            }
+
+        });
+
+        JButton loadButton = new JButton();
+        ImageIcon iconLoad = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\load.png");
+        Image imageLoad = iconLoad.getImage();
+        loadButton.setIcon(new ImageIcon(imageLoad.getScaledInstance(32, 32, 4)));
+        loadButton.setName("LoadButton");
+        loadButton.setPreferredSize(new Dimension(32, 32));
+        loadButton.addActionListener((listener) -> {
+            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+
+            int returnValue = jfc.showOpenDialog(null);
+
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = jfc.getSelectedFile();
+
+                try (FileInputStream stream = new FileInputStream(selectedFile)) {
+                    byte[] file = stream.readAllBytes();
+                    jTextArea.setText(new String(file));
+                } catch (IOException e) {
+                    jTextArea.setText(null);
+                }
+            }
+
+
+        });
+
+        JButton searchButton = new JButton();
+        ImageIcon search = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\mglass.png");
+        Image searchImage = search.getImage();
+        searchButton.setIcon(new ImageIcon(searchImage.getScaledInstance(32, 32, 1)));
+        searchButton.setPreferredSize(new Dimension(32, 32));
+        searchButton.setName("SearchButton");
+        searchButton.addActionListener((listener) -> {
+        });
 
         JPanel textBodyPanel = new JPanel();
-        textBodyPanel.setBounds(30, 30, 220, 220);
-        textBodyPanel.add(fileNameField, BorderLayout.PAGE_START);
+        textBodyPanel.setBounds(30, 30, 200, 200);
         textBodyPanel.add(saveButton, BorderLayout.PAGE_START);
         textBodyPanel.add(loadButton, BorderLayout.PAGE_START);
+        textBodyPanel.add(fileNameField, BorderLayout.PAGE_START);
+        textBodyPanel.add(searchButton, BorderLayout.PAGE_START);
         textBodyPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JMenuBar menuBar = new JMenuBar();
@@ -72,13 +107,20 @@ public class TextEditor extends JFrame {
         JMenuItem loadMenuItem = new JMenuItem("Load");
         loadMenuItem.setName("MenuLoad");
         loadMenuItem.addActionListener(listener -> {
-            String fileName = fileNameField.getText();
-            try (InputStream stream = new FileInputStream(new File(fileName));) {
-                byte[] file = stream.readAllBytes();
-                jTextArea.setText(new String(file));
-            } catch (IOException e) {
-                jTextArea.setText(null);
+            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+
+            int returnValue = jfc.showOpenDialog(null);
+
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = jfc.getSelectedFile();
+                try (InputStream stream = new FileInputStream(selectedFile)) {
+                    byte[] file = stream.readAllBytes();
+                    jTextArea.setText(new String(file));
+                } catch (IOException e) {
+                    jTextArea.setText(null);
+                }
             }
+
         });
 
         JMenuItem saveMenuItem = new JMenuItem("Save");
@@ -109,6 +151,5 @@ public class TextEditor extends JFrame {
 
 
         setVisible(true);
-
     }
 }
