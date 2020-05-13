@@ -6,7 +6,10 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.*;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.List;
 
 public class TextEditor extends JFrame {
 
@@ -15,13 +18,15 @@ public class TextEditor extends JFrame {
     }
 
     private void initApp() {
+        List<Integer> occurrenceIndexes = new ArrayList<>();
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 420);
         setLocationRelativeTo(null);
 
         JTextArea searchField = new JTextArea();
         searchField.setPreferredSize(new Dimension(100, 30));
-        searchField.setName("FilenameField");
+        searchField.setName("SearchField");
         searchField.getDocument().putProperty("filterNewlines", Boolean.TRUE);
         searchField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
@@ -29,6 +34,11 @@ public class TextEditor extends JFrame {
         jTextArea.setName("TextArea");
         setTitle("Text Editor");
         jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        jfc.setName("FileChooser");
+
+        add(jfc);
 
         JScrollPane scrollPane = new JScrollPane(jTextArea);
         scrollPane.setName("ScrollPane");
@@ -41,25 +51,43 @@ public class TextEditor extends JFrame {
         saveButton.setIcon(new ImageIcon(image.getScaledInstance(32, 32, 4)));
         saveButton.setName("SaveButton");
         saveButton.setPreferredSize(new Dimension(32, 32));
-        saveButton.addActionListener(saveFileActionListener(jTextArea));
+        saveButton.addActionListener(saveFileActionListener(jTextArea, jfc));
 
         JButton loadButton = new JButton();
         ImageIcon iconLoad = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\load.png");
         Image imageLoad = iconLoad.getImage();
         loadButton.setIcon(new ImageIcon(imageLoad.getScaledInstance(32, 32, 4)));
-        loadButton.setName("LoadButton");
+        loadButton.setName("OpenButton");
         loadButton.setPreferredSize(new Dimension(32, 32));
-        loadButton.addActionListener(loadFileActionListener(jTextArea));
+        loadButton.addActionListener(loadFileActionListener(jTextArea, jfc));
 
         JCheckBox useRegExpCheckBox = new JCheckBox("Use regex");
+        useRegExpCheckBox.setName("UseRegExCheckbox");
 
         JButton searchButton = new JButton();
         ImageIcon search = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\mglass.png");
         Image searchImage = search.getImage();
         searchButton.setIcon(new ImageIcon(searchImage.getScaledInstance(32, 32, 1)));
         searchButton.setPreferredSize(new Dimension(32, 32));
-        searchButton.setName("SearchButton");
+        searchButton.setName("StartSearchButton");
         searchButton.addActionListener((listener) -> {
+            Thread thread = new Thread(() -> {
+                String searchWord = searchField.getText();
+                String text = jTextArea.getText();
+                Pattern pattern = Pattern.compile(searchWord);
+                Matcher matcher = pattern.matcher(text);
+
+                while (matcher.find()) {
+                    occurrenceIndexes.add(matcher.start());
+                }
+
+            });
+            try {
+                thread.start();
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         });
 
         JButton previousMatchButton = new JButton();
@@ -95,7 +123,7 @@ public class TextEditor extends JFrame {
         searchMenu.setName("MenuSearch");
 
         JMenuItem startSearch = new JMenuItem("Start search");
-        startSearch.setName("MenuSearchStart");
+        startSearch.setName("MenuStartSearch");
         searchMenu.add(startSearch);
 
         JMenuItem previousSearch = new JMenuItem("Previous match");
@@ -115,12 +143,12 @@ public class TextEditor extends JFrame {
         fileMenu.setName("MenuFile");
 
         JMenuItem loadMenuItem = new JMenuItem("Open");
-        loadMenuItem.setName("MenuLoad");
-        loadMenuItem.addActionListener(loadFileActionListener(jTextArea));
+        loadMenuItem.setName("MenuOpen");
+        loadMenuItem.addActionListener(loadFileActionListener(jTextArea, jfc));
 
         JMenuItem saveMenuItem = new JMenuItem("Save");
         saveMenuItem.setName("MenuSave");
-        saveMenuItem.addActionListener(saveFileActionListener(jTextArea));
+        saveMenuItem.addActionListener(saveFileActionListener(jTextArea, jfc));
 
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.setName("MenuExit");
@@ -143,9 +171,8 @@ public class TextEditor extends JFrame {
 
     }
 
-    private ActionListener loadFileActionListener(JTextArea jTextArea) {
+    private ActionListener loadFileActionListener(JTextArea jTextArea, JFileChooser jfc) {
         return listener -> {
-            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 
             int returnValue = jfc.showOpenDialog(null);
 
@@ -162,9 +189,8 @@ public class TextEditor extends JFrame {
         };
     }
 
-    private ActionListener saveFileActionListener(JTextArea jTextArea) {
+    private ActionListener saveFileActionListener(JTextArea jTextArea, JFileChooser jfc) {
         return (listener) -> {
-            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 
             int returnValue = jfc.showOpenDialog(null);
 
