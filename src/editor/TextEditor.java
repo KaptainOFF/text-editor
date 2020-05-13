@@ -3,8 +3,10 @@ package editor;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.util.function.Consumer;
 
 public class TextEditor extends JFrame {
 
@@ -19,7 +21,7 @@ public class TextEditor extends JFrame {
 
         JTextArea searchField = new JTextArea();
         searchField.setPreferredSize(new Dimension(100, 30));
-        searchField.setName("SearchField");
+        searchField.setName("FilenameField");
         searchField.getDocument().putProperty("filterNewlines", Boolean.TRUE);
         searchField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
@@ -32,27 +34,14 @@ public class TextEditor extends JFrame {
         scrollPane.setName("ScrollPane");
         scrollPane.setBounds(20, 50, 345, 300);
 
+
         JButton saveButton = new JButton();
         ImageIcon icon = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\save.png");
         Image image = icon.getImage();
         saveButton.setIcon(new ImageIcon(image.getScaledInstance(32, 32, 4)));
         saveButton.setName("SaveButton");
         saveButton.setPreferredSize(new Dimension(32, 32));
-        saveButton.addActionListener((listener) -> {
-            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-
-            int returnValue = jfc.showOpenDialog(null);
-
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = jfc.getSelectedFile();
-                try (FileOutputStream writer = new FileOutputStream(selectedFile)) {
-                    byte[] lines = jTextArea.getText().getBytes();
-                    writer.write(lines);
-                } catch (IOException e) {
-                    jTextArea.setText(null);
-                }
-            }
-        });
+        saveButton.addActionListener(saveFileActionListener(jTextArea));
 
         JButton loadButton = new JButton();
         ImageIcon iconLoad = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\load.png");
@@ -60,22 +49,7 @@ public class TextEditor extends JFrame {
         loadButton.setIcon(new ImageIcon(imageLoad.getScaledInstance(32, 32, 4)));
         loadButton.setName("LoadButton");
         loadButton.setPreferredSize(new Dimension(32, 32));
-        loadButton.addActionListener((listener) -> {
-            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-
-            int returnValue = jfc.showOpenDialog(null);
-
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = jfc.getSelectedFile();
-
-                try (FileInputStream stream = new FileInputStream(selectedFile)) {
-                    byte[] file = stream.readAllBytes();
-                    jTextArea.setText(new String(file));
-                } catch (IOException e) {
-                    jTextArea.setText(null);
-                }
-            }
-        });
+        loadButton.addActionListener(loadFileActionListener(jTextArea));
 
         JCheckBox useRegExpCheckBox = new JCheckBox("Use regex");
 
@@ -142,40 +116,11 @@ public class TextEditor extends JFrame {
 
         JMenuItem loadMenuItem = new JMenuItem("Open");
         loadMenuItem.setName("MenuLoad");
-        loadMenuItem.addActionListener(listener -> {
-            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-
-            int returnValue = jfc.showOpenDialog(null);
-
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = jfc.getSelectedFile();
-                try (InputStream stream = new FileInputStream(selectedFile)) {
-                    byte[] file = stream.readAllBytes();
-                    jTextArea.setText(new String(file));
-                } catch (IOException e) {
-                    jTextArea.setText(null);
-                }
-            }
-
-        });
+        loadMenuItem.addActionListener(loadFileActionListener(jTextArea));
 
         JMenuItem saveMenuItem = new JMenuItem("Save");
         saveMenuItem.setName("MenuSave");
-        saveMenuItem.addActionListener((listener) -> {
-            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-
-            int returnValue = jfc.showOpenDialog(null);
-
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = jfc.getSelectedFile();
-                try (FileOutputStream writer = new FileOutputStream(selectedFile)) {
-                    byte[] lines = jTextArea.getText().getBytes();
-                    writer.write(lines);
-                } catch (IOException e) {
-                    jTextArea.setText(null);
-                }
-            }
-        });
+        saveMenuItem.addActionListener(saveFileActionListener(jTextArea));
 
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.setName("MenuExit");
@@ -196,5 +141,42 @@ public class TextEditor extends JFrame {
 
         setVisible(true);
 
+    }
+
+    private ActionListener loadFileActionListener(JTextArea jTextArea) {
+        return listener -> {
+            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+
+            int returnValue = jfc.showOpenDialog(null);
+
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = jfc.getSelectedFile();
+                try (InputStream stream = new FileInputStream(selectedFile)) {
+                    byte[] file = stream.readAllBytes();
+                    jTextArea.setText(new String(file));
+                } catch (IOException e) {
+                    jTextArea.setText(null);
+                }
+            }
+
+        };
+    }
+
+    private ActionListener saveFileActionListener(JTextArea jTextArea) {
+        return (listener) -> {
+            JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+
+            int returnValue = jfc.showOpenDialog(null);
+
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = jfc.getSelectedFile();
+                try (FileOutputStream writer = new FileOutputStream(selectedFile)) {
+                    byte[] lines = jTextArea.getText().getBytes();
+                    writer.write(lines);
+                } catch (IOException e) {
+                    jTextArea.setText(null);
+                }
+            }
+        };
     }
 }
