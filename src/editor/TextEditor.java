@@ -7,9 +7,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.List;
 
 public class TextEditor extends JFrame {
 
@@ -37,7 +38,6 @@ public class TextEditor extends JFrame {
 
         JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         jfc.setName("FileChooser");
-
         add(jfc);
 
         JScrollPane scrollPane = new JScrollPane(jTextArea);
@@ -46,16 +46,14 @@ public class TextEditor extends JFrame {
 
 
         JButton saveButton = new JButton();
-        ImageIcon icon = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\save.png");
-        Image image = icon.getImage();
+        Image image = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\save.png").getImage();
         saveButton.setIcon(new ImageIcon(image.getScaledInstance(32, 32, 4)));
         saveButton.setName("SaveButton");
         saveButton.setPreferredSize(new Dimension(32, 32));
         saveButton.addActionListener(saveFileActionListener(jTextArea, jfc));
 
         JButton loadButton = new JButton();
-        ImageIcon iconLoad = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\load.png");
-        Image imageLoad = iconLoad.getImage();
+        Image imageLoad = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\load.png").getImage();
         loadButton.setIcon(new ImageIcon(imageLoad.getScaledInstance(32, 32, 4)));
         loadButton.setName("OpenButton");
         loadButton.setPreferredSize(new Dimension(32, 32));
@@ -63,32 +61,6 @@ public class TextEditor extends JFrame {
 
         JCheckBox useRegExpCheckBox = new JCheckBox("Use regex");
         useRegExpCheckBox.setName("UseRegExCheckbox");
-
-        JButton searchButton = new JButton();
-        ImageIcon search = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\mglass.png");
-        Image searchImage = search.getImage();
-        searchButton.setIcon(new ImageIcon(searchImage.getScaledInstance(32, 32, 1)));
-        searchButton.setPreferredSize(new Dimension(32, 32));
-        searchButton.setName("StartSearchButton");
-        searchButton.addActionListener((listener) -> {
-            Thread thread = new Thread(() -> {
-                String searchWord = searchField.getText();
-                String text = jTextArea.getText();
-                Pattern pattern = Pattern.compile(searchWord);
-                Matcher matcher = pattern.matcher(text);
-
-                while (matcher.find()) {
-                    occurrenceIndexes.add(matcher.start());
-                }
-
-            });
-            try {
-                thread.start();
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
 
         JButton previousMatchButton = new JButton();
         ImageIcon arrLeft = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\arrLeft.png");
@@ -103,6 +75,49 @@ public class TextEditor extends JFrame {
         nextMatchButton.setIcon(new ImageIcon(arrRightImage.getScaledInstance(32, 32, 1)));
         nextMatchButton.setPreferredSize(new Dimension(32, 32));
         nextMatchButton.setName("NextMatchButton");
+
+        JButton searchButton = new JButton();
+        Image searchImage = new ImageIcon("C:\\Users\\Kapitanov\\Downloads\\mglass.png").getImage();
+        searchButton.setIcon(new ImageIcon(searchImage.getScaledInstance(32, 32, 1)));
+        searchButton.setPreferredSize(new Dimension(32, 32));
+        searchButton.setName("StartSearchButton");
+        searchButton.addActionListener((listener) -> {
+            Thread thread = new Thread(() -> {
+                String searchWord = searchField.getText();
+                String text = jTextArea.getText();
+                Pattern pattern = Pattern.compile(searchWord);
+                Matcher matcher = pattern.matcher(text);
+                AtomicInteger index = new AtomicInteger(0);
+                while (matcher.find()) {
+                    occurrenceIndexes.add(matcher.start());
+                    System.out.println(matcher.start() + searchWord.length());
+                }
+                startSearch(occurrenceIndexes.get(index.getAndIncrement()), jTextArea, searchWord);
+                nextMatchButton.addActionListener(actionEvent -> {
+                        try {
+                            startSearch(occurrenceIndexes.get(index.getAndIncrement()), jTextArea, searchWord);
+                        } catch (IndexOutOfBoundsException e) {
+                            index.set(0);
+                        }
+                });
+
+                previousMatchButton.addActionListener(l -> {
+                    if (index.get() >= 0) {
+                        startSearch(occurrenceIndexes.get(index.getAndDecrement()), jTextArea, searchWord);
+                    } else {
+                        index.set(occurrenceIndexes.size());
+                    }
+                });
+                occurrenceIndexes.forEach(System.out::println);
+            });
+            try {
+                thread.start();
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
 
         JPanel textBodyPanel = new JPanel();
         textBodyPanel.setBounds(30, 30, 200, 200);
@@ -122,10 +137,6 @@ public class TextEditor extends JFrame {
         searchMenu.setMnemonic(KeyEvent.VK_S);
         searchMenu.setName("MenuSearch");
 
-        JMenuItem startSearch = new JMenuItem("Start search");
-        startSearch.setName("MenuStartSearch");
-        searchMenu.add(startSearch);
-
         JMenuItem previousSearch = new JMenuItem("Previous match");
         previousSearch.setName("MenuPreviousMatch");
         searchMenu.add(previousSearch);
@@ -133,6 +144,46 @@ public class TextEditor extends JFrame {
         JMenuItem nextMatch = new JMenuItem("Next match");
         nextMatch.setName("MenuNextMatch");
         searchMenu.add(nextMatch);
+
+        JMenuItem startSearch = new JMenuItem("Start search");
+        startSearch.setName("MenuStartSearch");
+        searchMenu.add(startSearch);
+        startSearch.addActionListener((listener) -> {
+            Thread thread = new Thread(() -> {
+                String searchWord = searchField.getText();
+                String text = jTextArea.getText();
+                Pattern pattern = Pattern.compile(searchWord);
+                Matcher matcher = pattern.matcher(text);
+                while (matcher.find()) {
+                    occurrenceIndexes.add(matcher.start());
+                }
+
+            });
+            try {
+                thread.start();
+                thread.join();
+                String searchWord = searchField.getText();
+                AtomicInteger index = new AtomicInteger(0);
+                startSearch(occurrenceIndexes.get(index.getAndIncrement()), jTextArea, searchWord);
+                nextMatch.addActionListener(actionEvent -> {
+                    try {
+                        startSearch(occurrenceIndexes.get(index.getAndIncrement()), jTextArea, searchWord);
+                    } catch (IndexOutOfBoundsException e) {
+                        index.set(0);
+                    }
+                });
+
+                previousSearch.addActionListener(l -> {
+                    try {
+                        startSearch(occurrenceIndexes.get(index.getAndDecrement()), jTextArea, searchWord);
+                    } catch (IndexOutOfBoundsException e) {
+                        index.set(occurrenceIndexes.size() - 1);
+                    }
+                });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
 
         JMenuItem useRegExp = new JMenuItem("Use regular expressions");
         useRegExp.setName("MenuUseRegExp");
@@ -169,6 +220,12 @@ public class TextEditor extends JFrame {
 
         setVisible(true);
 
+    }
+
+    private void startSearch(int index , JTextArea jTextArea, String word) {
+        jTextArea.setCaretPosition(index + word.length());
+        jTextArea.select(index, index + word.length());
+        jTextArea.grabFocus();
     }
 
     private ActionListener loadFileActionListener(JTextArea jTextArea, JFileChooser jfc) {
